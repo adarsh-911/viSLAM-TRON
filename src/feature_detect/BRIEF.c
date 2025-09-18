@@ -1,13 +1,12 @@
 #include "../../inc/data_structs.h"
 #include "../../inc/feature_detect/feature_detect.h"
 
-// Precompute test pattern (should be randomized in practice)
 void generate_test_pattern(int pattern[][4], int size) {
   for (int i = 0; i < size; i++) {
-    pattern[i][0] = rand() % 31 - 15; // dx1
-    pattern[i][1] = rand() % 31 - 15; // dy1
-    pattern[i][2] = rand() % 31 - 15; // dx2
-    pattern[i][3] = rand() % 31 - 15; // dy2
+    pattern[i][0] = rand() % 31 - 15;
+    pattern[i][1] = rand() % 31 - 15;
+    pattern[i][2] = rand() % 31 - 15;
+    pattern[i][3] = rand() % 31 - 15;
   }
 }
 
@@ -20,7 +19,6 @@ BriefDescriptor compute_brief_descriptor(Img *image, Keypoint kp, int pattern[][
     int x2 = kp.x + pattern[i][2];
     int y2 = kp.y + pattern[i][3];
     
-    // Boundary check
     if (x1 < 0 || x1 >= image->w || y1 < 0 || y1 >= image->h ||  x2 < 0 || x2 >= image->w || y2 < 0 || y2 >= image->h) continue;
     
     uint8_t val1 = image->pixels[y1 * image->w + x1];

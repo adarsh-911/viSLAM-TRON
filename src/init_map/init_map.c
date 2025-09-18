@@ -57,7 +57,7 @@ void normalize_pixel_to_vec (RawKP *kp1, RawKP *kp2, RawKP *kp1_norm, RawKP *kp2
   }
 }
 
-void find_essential_matrix (RawKP *kp1_norm, RawKP *kp2_norm) {
+void find_essential_matrix (RawKP *kp1_norm, RawKP *kp2_norm, int size) {
   
 }
 

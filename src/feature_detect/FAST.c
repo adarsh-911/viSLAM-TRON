@@ -8,7 +8,6 @@ int is_fast_corner(Img *image, int x, int y, int threshold) {
   uint8_t center = image->pixels[y * image->w + x];
   int brighter = 0, darker = 0;
   
-  // Circle positions around the center pixel
   int circle[16][2] = {
     {0, -3}, {1, -3}, {2, -2}, {3, -1},
     {3, 0}, {3, 1}, {2, 2}, {1, 3},
@@ -36,7 +35,7 @@ Keypoint* detect_fast_keypoints(Img *image, int *num_keypoints) {
       if (is_fast_corner(image, x, y, FAST_THRESHOLD)) {
         keypoints[*num_keypoints].x = x;
         keypoints[*num_keypoints].y = y;
-        keypoints[*num_keypoints].response = 1.0f; // Simplified
+        keypoints[*num_keypoints].response = 1.0f;
         (*num_keypoints)++;
       }
     }
