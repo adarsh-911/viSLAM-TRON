@@ -18,7 +18,7 @@ typedef struct {
 } RawKP;
 
 typedef struct {
-  uint64_t descriptor[4]; // 256 bits
+  uint64_t descriptor[4];
 } BriefDescriptor;
 
 typedef struct {
@@ -29,7 +29,7 @@ typedef struct {
 typedef struct {
   int idx1, idx2;
   int distance;
-  float confidence;  // Match quality (0-1)
+  float confidence
 } Match;
 
 typedef struct {
