@@ -1,7 +1,7 @@
 #include "inc/init_map/init_map.h"
 #include "inc/file_manager.h"
 
-#define MAX_WORLD_POINTS 800
+#define MAX_WORLD_POINTS 1200
  
 void save_files (RawKP *kp1, RawKP* kp2, int size) {
   save_raw("bin/frame1.raw", frame1.pixels, frame1.w, frame1.h);
@@ -32,13 +32,17 @@ int main() {
 
   // Map Init (get raw 2D points)
   RawKP pixels1[MAX_WORLD_POINTS], pixels2[MAX_WORLD_POINTS];
-  init_map("dataset/00.png", "dataset/01.png", depth1, depth2, CURRENT_WORLD_POINTS, (int) MAX_WORLD_POINTS, &R, &t, "yes", pixels1, pixels2);
+  int num_matches;
+  init_map("dataset/00.png", "dataset/01.png", depth1, depth2, &num_matches, CURRENT_WORLD_POINTS, (int) MAX_WORLD_POINTS, &R, &t, "yes", pixels1, pixels2);
+
+  int minSize = MAX_WORLD_POINTS;
+  if (num_matches < (int)MAX_WORLD_POINTS) minSize = num_matches;
 
   // Save raw 2D points
-  save_files (pixels1, pixels2, MAX_WORLD_POINTS);
+  save_files (pixels1, pixels2, minSize);
 
   // Save world points
-  save_world_points("bin/WorldPoints.bin", CURRENT_WORLD_POINTS, MAX_WORLD_POINTS);
+  save_world_points("bin/WorldPoints.bin", CURRENT_WORLD_POINTS, minSize);
 
   // Print world space points
   printf("World space points :\n");

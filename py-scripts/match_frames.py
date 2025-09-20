@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 w = 1242
 h = 375
 
-MAX_POINTS = 800
+MAX_POINTS = 1200
 
 img_data1 = np.fromfile("bin/frame1.raw", dtype=np.uint8).reshape(h, w)
 img_data2 = np.fromfile("bin/frame2.raw", dtype=np.uint8).reshape(h, w)

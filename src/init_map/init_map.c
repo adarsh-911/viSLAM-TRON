@@ -77,7 +77,7 @@ void get_raw_points (RawKP *points1, RawKP *points2, int size) {
   return;
 }
 
-int init_map(char *frame_1, char *frame_2, uint8_t *depth1, uint8_t *depth2, vec3 *world_points, int max, mat3 *R, vec3 *t, char *getRaw, RawKP *raw_match1, RawKP *raw_match2) {
+int init_map(char *frame_1, char *frame_2, uint8_t *depth1, uint8_t *depth2, int *num, vec3 *world_points, int max, mat3 *R, vec3 *t, char *getRaw, RawKP *raw_match1, RawKP *raw_match2) {
 
   if (load_frames(frame_1, &frame1, frame_2, &frame2)) return 1;
 
@@ -88,6 +88,8 @@ int init_map(char *frame_1, char *frame_2, uint8_t *depth1, uint8_t *depth2, vec
   Feature *features_2 = extract_features(&frame2, &num_features2);
 
   Correspondence* correspondences = match_and_correspond(num_features1, num_features2, features_1, features_2, &num_matches);
+
+  *num = num_matches;
   
   RawKP kp1_raw_match[num_matches], kp2_raw_match[num_matches];
 
