@@ -47,3 +47,19 @@ void print_pixel (Img* frame, int u, int v) {
 
   return;
 }
+
+int load_frames(char *file1, Img *frame1, char *file2, Img *frame2) {
+
+  bool status1, status2;
+  load_image(file1, frame1, &status1);
+  load_image(file2, frame2, &status2);
+
+  if (!status1 || !status2) {
+    printf("Error loading frames!\n");
+    free_img(frame1);
+    free_img(frame2);
+
+    return 1;
+  }
+  return 0;
+}

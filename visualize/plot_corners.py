@@ -4,12 +4,16 @@ import matplotlib.pyplot as plt
 w = 1242
 h = 375
 
+MAX_POINTS = 800
+
 img_data1 = np.fromfile("bin/frame1.raw", dtype=np.uint8).reshape(h, w)
 img_data2 = np.fromfile("bin/frame2.raw", dtype=np.uint8).reshape(h, w)
 
 points1 = np.fromfile("bin/kp1.raw", dtype=np.int32).reshape(-1, 2)
 points2 = np.fromfile("bin/kp2.raw", dtype=np.int32).reshape(-1, 2)
 
+points1 = points1[:MAX_POINTS]
+points2 = points2[:MAX_POINTS]
 #print(points)
 
 fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(6, 12), sharex=True, sharey=True)

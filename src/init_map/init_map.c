@@ -1,34 +1,20 @@
 #include "../../inc/intrinsics.h"
 #include "../../inc/math_structs.h"
-#include "../../inc/loader.h"
 #include "../../inc/feature_detect/feature_detect.h"
 #include "../../inc/feature_match/feature_match.h"
 #include "../../inc/svd.h"
-#include "../../inc/save_files.h"
 #include "../../inc/init_map/init_map.h"
+#include "../../inc/loader.h"
 
 Img frame1, frame2;
-Feature *features_1, *features_2;
+int num_matches;
+mat3 K_MAT_INV;
 
-int load_frames() {
+RawKP *match1, *match2;
 
-  bool status1, status2;
-  load_image("dataset/00.png", &frame1, &status1);
-  load_image("dataset/01.png", &frame2, &status2);
+Correspondence* match_and_correspond (int num1, int num2, Feature *features_1, Feature* features_2, int *num_matches) {
 
-  if (!status1 || !status2) {
-    printf("Error loading frames!\n");
-    free_img(&frame1);
-    free_img(&frame2);
-
-    return 1;
-  }
-  return 0;
-}
-
-Correspondence* match_and_correspond (int num1, int num2, int *num_matches) {
-  int max_hamming_distance = 80;
-  Match *matches = match_features(features_1, num1, features_2, num2, num_matches, max_hamming_distance);
+  Match *matches = match_features(features_1, num1, features_2, num2, num_matches, MAX_HAMMING_DISTANCE);
 
   Correspondence *correspondences = get_correspondences(features_1, features_2, matches, *num_matches);
 
@@ -66,40 +52,38 @@ void extract_depth_from_npu (RawKP *kp1, float *kp1_depth, RawKP *kp2, float *kp
 
 void pack_to_point3 (vec2 *kp1_norm, float *kp1_depth, vec3 *kp1_cam1, vec2 *kp2_norm, float* kp2_depth, vec3 *kp2_cam2, int size) {
   for (int i = 0 ; i < size ; i++) {
-    kp1_cam1[i].x = kp1_norm[i].x;
-    kp1_cam1[i].y = kp1_norm[i].y;
+    kp1_cam1[i].x = kp1_norm[i].x; kp1_cam1[i].y = kp1_norm[i].y;
     kp1_cam1[i].z = kp1_depth[i];
 
-    kp2_cam2[i].x = kp2_norm[i].x;
-    kp2_cam2[i].y = kp2_norm[i].y;
+    kp2_cam2[i].x = kp2_norm[i].x; kp2_cam2[i].y = kp2_norm[i].y;
     kp2_cam2[i].z = kp2_depth[i];
   }
 
   return;
 }
 
-void save_files (RawKP *kp1, RawKP* kp2, int size) {
-  save_raw("bin/frame1.raw", frame1.pixels, frame1.w, frame1.h);
-  save_points("bin/kp1.raw", kp1, size);
+void get_raw_points (RawKP *points1, RawKP *points2, int size) {
+  for (int i = 0 ; i < size ; i++) {
+    if (i == num_matches) break;
 
-  save_raw("bin/frame2.raw", frame2.pixels, frame1.w, frame1.h);
-  save_points("bin/kp2.raw", kp2, size);
+    points1[i] = match1[i];
+    points2[i] = match2[i];
+  }
 
   return;
-
 }
 
-int init_map(vec3 *world_points, int max, mat3 *R, vec3 *t) {
+int init_map(char *frame_1, char *frame_2, vec3 *world_points, int max, mat3 *R, vec3 *t, char *getRaw, RawKP *raw_match1, RawKP *raw_match2) {
 
-  if (load_frames()) return 1;
+  if (load_frames(frame_1, &frame1, frame_2, &frame2)) return 1;
 
   K_MAT_INV = compute_inv(K_MAT);
 
-  int num_features1, num_features2, num_matches;
-  features_1 = extract_features(&frame1, &num_features1);
-  features_2 = extract_features(&frame2, &num_features2);
+  int num_features1, num_features2;
+  Feature *features_1 = extract_features(&frame1, &num_features1);
+  Feature *features_2 = extract_features(&frame2, &num_features2);
 
-  Correspondence* correspondences = match_and_correspond(num_features1, num_features2, &num_matches);
+  Correspondence* correspondences = match_and_correspond(num_features1, num_features2, features_1, features_2, &num_matches);
   
   RawKP kp1_raw_match[num_matches], kp2_raw_match[num_matches];
 
@@ -113,12 +97,15 @@ int init_map(vec3 *world_points, int max, mat3 *R, vec3 *t) {
     correspondences++;
   }
 
+  match1 = kp1_raw_match;
+  match2 = kp2_raw_match;
+
+  if (strcmp(getRaw, "yes") == 0) get_raw_points(raw_match1, raw_match2, max);
+
   vec2 kp1_norm[num_matches], kp2_norm[num_matches];
   float kp1_depth[num_matches], kp2_depth[num_matches];
 
   vec3 kp1_cam1[num_matches], kp2_cam2[num_matches];
-
-  for (int i = 0 ; i < max ; i++) world_points[i] = kp1_cam1[i];
 
   normalize_pixel_to_vec(kp1_raw_match, kp2_raw_match, kp1_norm, kp2_norm, num_matches);
 
@@ -126,9 +113,12 @@ int init_map(vec3 *world_points, int max, mat3 *R, vec3 *t) {
 
   pack_to_point3(kp1_norm, kp1_depth, kp1_cam1, kp2_norm, kp2_depth, kp2_cam2, num_matches);
 
-  recover_pose_svd(kp1_cam1, kp2_cam2, num_matches, R, t);
+  for (int i = 0 ; i < max ; i++) {
+    if (i == num_matches) break;
+    world_points[i] = kp1_cam1[i];
+  }
 
-  save_files(kp1_raw_match, kp2_raw_match, num_matches);
+  recover_pose_svd(kp1_cam1, kp2_cam2, num_matches, R, t);
 
   return 0;
 }
