@@ -18,6 +18,10 @@ typedef struct {
 } RawKP;
 
 typedef struct {
+  int x, y, z;
+} Point3;
+
+typedef struct {
   uint64_t descriptor[4];
 } BriefDescriptor;
 
@@ -29,7 +33,7 @@ typedef struct {
 typedef struct {
   int idx1, idx2;
   int distance;
-  float confidence
+  float confidence;
 } Match;
 
 typedef struct {

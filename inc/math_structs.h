@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -31,5 +32,11 @@ vec3 vec3_add (vec3 a, vec3 b);
 vec4 vec4_add (vec4 a, vec4 b);
 
 vec3 product_mat3_vec3(mat3 mat, vec3 vec);
+float mat3_det(mat3 *M);
+void mat3_mult(mat3 A, mat3 B, mat3 *R);
+void mat3_transpose(mat3 A, mat3 *AT);
 
 mat3 compute_inv(const mat3 mat);
+
+void mat3_print(const char* name, mat3 M);
+void vec3_print (const char* name, vec3 V);
