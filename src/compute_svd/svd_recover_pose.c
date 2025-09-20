@@ -72,7 +72,7 @@ void rigid_transform(vec3 *A, vec3 *B, int N, mat3 *R, vec3 *t) {
     PB[i][2] = B[i].z - muB.z;
   }
 
-  mat3 H = (mat3){{0}};
+  mat3 H = {0};
   for(int i = 0 ; i < N ; i++) {
     for(int r = 0 ; r < 3 ; r++) for(int c = 0 ; c < 3 ; c++) {
       H.m[r][c] += PA[i][r] * PB[i][c];
@@ -83,9 +83,9 @@ void rigid_transform(vec3 *A, vec3 *B, int N, mat3 *R, vec3 *t) {
   vec3 S;
   svd_mat3(H,&U,&S,&V);
 
-  mat3 Ut, tmp;
+  mat3 Ut;
   mat3_transpose(U, &Ut);
-  mat3_mult(V, Ut ,R);
+  mat3_mult(V, Ut, R);
 
   if (mat3_det(R) < 0) {
     for(int i = 0 ; i < 3 ; i++) V.m[i][2] *= -1;

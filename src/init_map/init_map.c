@@ -38,12 +38,16 @@ void normalize_pixel_to_vec (RawKP *kp1, RawKP *kp2, vec2 *kp1_norm, vec2 *kp2_n
   }
 }
 
-void extract_depth_from_npu (RawKP *kp1, float *kp1_depth, RawKP *kp2, float *kp2_depth, int size) {
+float get_depth_from_map (int u, int v, uint8_t *depth) {
+  return (float)depth[u * WIDTH + v];
+}
+
+void extract_depth_from_npu (RawKP *kp1, uint8_t *depth1, float *kp1_depth, RawKP *kp2, uint8_t *depth2, float *kp2_depth, int size) {
   for (int i = 0 ; i < size ; i++) {
-    kp1_depth[i] = 1.0f * SCALING_FACTOR_DEPTH_MODEL;
+    kp1_depth[i] = get_depth_from_map(kp1[i].x, kp1[i].y, depth1) * SCALING_FACTOR_DEPTH_MODEL;
     //kp1_depth[i] = get_depth_from_npu(kp1[i].x, kp1[i].y, &frame1) * SCALING_FACTOR_DEPTH_MODEL;
 
-    kp2_depth[i] = 0.5f * SCALING_FACTOR_DEPTH_MODEL;
+    kp2_depth[i] = get_depth_from_map(kp2[i].x, kp2[i].y, depth2) * SCALING_FACTOR_DEPTH_MODEL;
     //kp2_depth[i] = get_depth_from_npu(kp2[i].x, kp2[i].y, &frame2) * SCALING_FACTOR_DEPTH_MODEL;
   }
 
@@ -73,7 +77,7 @@ void get_raw_points (RawKP *points1, RawKP *points2, int size) {
   return;
 }
 
-int init_map(char *frame_1, char *frame_2, vec3 *world_points, int max, mat3 *R, vec3 *t, char *getRaw, RawKP *raw_match1, RawKP *raw_match2) {
+int init_map(char *frame_1, char *frame_2, uint8_t *depth1, uint8_t *depth2, vec3 *world_points, int max, mat3 *R, vec3 *t, char *getRaw, RawKP *raw_match1, RawKP *raw_match2) {
 
   if (load_frames(frame_1, &frame1, frame_2, &frame2)) return 1;
 
@@ -109,7 +113,7 @@ int init_map(char *frame_1, char *frame_2, vec3 *world_points, int max, mat3 *R,
 
   normalize_pixel_to_vec(kp1_raw_match, kp2_raw_match, kp1_norm, kp2_norm, num_matches);
 
-  extract_depth_from_npu(kp1_raw_match, kp1_depth, kp2_raw_match, kp2_depth, num_matches);
+  extract_depth_from_npu(kp1_raw_match, depth1, kp1_depth, kp2_raw_match, depth2, kp2_depth, num_matches);
 
   pack_to_point3(kp1_norm, kp1_depth, kp1_cam1, kp2_norm, kp2_depth, kp2_cam2, num_matches);
 

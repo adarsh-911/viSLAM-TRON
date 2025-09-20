@@ -1,3 +1,8 @@
-gcc -o out ./src/init_map/init_map.c ./src/feature_detect/FAST.c ./src/feature_detect/BRIEF.c ./src/feature_detect/feature_extract.c ./src/feature_match/feature_match.c ./src/math_struct.c ./src/compute_svd/svd_recover_pose.c ./main.c -lm
+make clean
+python3 ./py-scripts/estimate_depth.py 00
+python3 ./py-scripts/estimate_depth.py 01
+
+make
+echo "-------------------------------------------------------"
 ./out
-#rm out
+rm out

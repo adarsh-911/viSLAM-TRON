@@ -2,6 +2,9 @@
 
 #include "math_structs.h"
 
+#define WIDTH 1242
+#define HEIGHT 375
+
 typedef struct {
   uint8_t *pixels;
   int w, h;
