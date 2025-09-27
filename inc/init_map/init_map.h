@@ -3,7 +3,7 @@
 #include "../data_structs.h"
 
 #define SCALING_FACTOR_DEPTH_MODEL (-0.002)
-#define MAX_HAMMING_DISTANCE 80
+#define MAX_HAMMING_DISTANCE 30
 
 extern Img frame1, frame2;
 

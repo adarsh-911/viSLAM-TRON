@@ -2,8 +2,9 @@
 
 #include "../data_structs.h"
 
-#define FAST_THRESHOLD 50
-#define FAST_ARC_THRESHOLD 11
+#define FAST_THRESHOLD 20
+#define FAST_ARC_THRESHOLD 10
+#define ENABLE_NMS 0
 #define BRIEF_DESCRIPTOR_SIZE 256
 
 Keypoint* detect_fast_keypoints(Img *image, int *num_keypoints);

@@ -43,6 +43,8 @@ int get_depth_map (char *file, uint8_t *depth, int H, int W) {
   if (n_read == 0) fprintf(stderr, "Error reading depth data\n");
   fclose(f);
 
+  // Read depth buffer from npu
+
   return 0;
 }
 
