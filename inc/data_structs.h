@@ -44,3 +44,9 @@ typedef struct {
   int x2, y2;
   float confidence;
 } Correspondence;
+
+typedef struct {
+  mat3 R;
+  vec3 t;
+  float s;
+} Pose;

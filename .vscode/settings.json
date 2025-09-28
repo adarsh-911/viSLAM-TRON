@@ -1,5 +1,7 @@
 {
   "files.associations": {
-    "save_files.h": "c"
+    "save_files.h": "c",
+    "init_map.h": "c",
+    "feature_detect.h": "c"
   }
 }

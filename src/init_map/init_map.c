@@ -1,16 +1,30 @@
-#include "../../inc/intrinsics.h"
 #include "../../inc/math_structs.h"
 #include "../../inc/feature_detect/feature_detect.h"
 #include "../../inc/feature_match/feature_match.h"
 #include "../../inc/svd.h"
 #include "../../inc/init_map/init_map.h"
-#include "../../inc/loader.h"
 
-Img frame1, frame2;
+#include <string.h>
+
 int num_matches;
 mat3 K_MAT_INV;
 
 RawKP *match1, *match2;
+
+void save_vec3(const char *filename, vec3 *points, int count) {
+  FILE *fp = fopen(filename, "wb");
+  if (!fp) {
+    perror("Failed to open file");
+    return;
+  }
+
+  size_t written = fwrite(points, sizeof(vec3), count, fp);
+  if (written != (size_t)count) {
+    perror("Failed to write all points");
+  }
+
+  fclose(fp);
+}
 
 Correspondence* match_and_correspond (int num1, int num2, Feature *features_1, Feature* features_2, int *num_matches) {
 
@@ -29,6 +43,8 @@ void normalize_pixel_to_vec (RawKP *kp1, RawKP *kp2, vec2 *kp1_norm, vec2 *kp2_n
     kp1_norm[i].x = dir1.x/dir1.z;
     kp1_norm[i].y = dir1.y/dir1.z;
 
+    //printf("Norm = %e\n", (kp1_norm[i].x*kp1_norm[i].x + kp1_norm[i].y*kp1_norm[i].y));
+
     vec3 curr_pixel2 = {kp2[i].x, kp2[i].y, 1.0f};
     vec3 dir2 = product_mat3_vec3(K_MAT_INV, curr_pixel2);
     kp2_norm[i].x = dir2.x/dir2.z;
@@ -39,16 +55,19 @@ void normalize_pixel_to_vec (RawKP *kp1, RawKP *kp2, vec2 *kp1_norm, vec2 *kp2_n
 }
 
 float get_depth_from_map (int u, int v, uint8_t *depth) {
-  return (float)depth[u * WIDTH + v];
+  return (float)depth[v * WIDTH + u];
 }
 
 void extract_depth_from_npu (RawKP *kp1, uint8_t *depth1, float *kp1_depth, RawKP *kp2, uint8_t *depth2, float *kp2_depth, int size) {
   for (int i = 0 ; i < size ; i++) {
-    kp1_depth[i] = get_depth_from_map(kp1[i].x, kp1[i].y, depth1) * SCALING_FACTOR_DEPTH_MODEL;
-    //kp1_depth[i] = get_depth_from_npu(kp1[i].x, kp1[i].y, &frame1) * SCALING_FACTOR_DEPTH_MODEL;
+    float temp = get_depth_from_map(kp1[i].x, kp1[i].y, depth1);
+    if (fabs(temp) < 1e-4) temp = 1e-4;
+    kp1_depth[i] = (255 - (0.8)*temp) * SCALING_FACTOR_DEPTH_MODEL;
+    
+    temp = get_depth_from_map(kp2[i].x, kp2[i].y, depth2);
+    if (fabs(temp) < 1e-4) temp = 1e-4;
+    kp2_depth[i] = (255 - (0.8)*temp) * SCALING_FACTOR_DEPTH_MODEL;
 
-    kp2_depth[i] = get_depth_from_map(kp2[i].x, kp2[i].y, depth2) * SCALING_FACTOR_DEPTH_MODEL;
-    //kp2_depth[i] = get_depth_from_npu(kp2[i].x, kp2[i].y, &frame2) * SCALING_FACTOR_DEPTH_MODEL;
   }
 
   return;
@@ -56,10 +75,11 @@ void extract_depth_from_npu (RawKP *kp1, uint8_t *depth1, float *kp1_depth, RawK
 
 void pack_to_point3 (vec2 *kp1_norm, float *kp1_depth, vec3 *kp1_cam1, vec2 *kp2_norm, float* kp2_depth, vec3 *kp2_cam2, int size) {
   for (int i = 0 ; i < size ; i++) {
-    kp1_cam1[i].x = kp1_norm[i].x; kp1_cam1[i].y = kp1_norm[i].y;
+    kp1_cam1[i].x = kp1_norm[i].x*kp1_depth[i]; kp1_cam1[i].y = kp1_norm[i].y*kp1_depth[i];
+    //kp1_cam1[i].x = kp1_norm[i].x; kp1_cam1[i].y = kp1_norm[i].y;
     kp1_cam1[i].z = kp1_depth[i];
 
-    kp2_cam2[i].x = kp2_norm[i].x; kp2_cam2[i].y = kp2_norm[i].y;
+    kp2_cam2[i].x = kp2_norm[i].x*kp2_depth[i]; kp2_cam2[i].y = kp2_norm[i].y*kp2_depth[i];
     kp2_cam2[i].z = kp2_depth[i];
   }
 
@@ -77,15 +97,15 @@ void get_raw_points (RawKP *points1, RawKP *points2, int size) {
   return;
 }
 
-int init_map(char *frame_1, char *frame_2, uint8_t *depth1, uint8_t *depth2, int *num, vec3 *world_points, int max, mat3 *R, vec3 *t, char *getRaw, RawKP *raw_match1, RawKP *raw_match2) {
+int init_map(Img *frame1, Img *frame2, const mat3 K_MAT, uint8_t *depth1, uint8_t *depth2, int *num, vec3 *world_points, int max, Pose* pose, char *getRaw, RawKP *raw_match1, RawKP *raw_match2) {
 
-  if (load_frames(frame_1, &frame1, frame_2, &frame2)) return 1;
+  //if (load_frames(frame_1, &frame1, frame_2, &frame2)) return 1;
 
   K_MAT_INV = compute_inv(K_MAT);
 
   int num_features1, num_features2;
-  Feature *features_1 = extract_features(&frame1, &num_features1);
-  Feature *features_2 = extract_features(&frame2, &num_features2);
+  Feature *features_1 = extract_features(frame1, &num_features1);
+  Feature *features_2 = extract_features(frame2, &num_features2);
 
   Correspondence* correspondences = match_and_correspond(num_features1, num_features2, features_1, features_2, &num_matches);
 
@@ -124,7 +144,19 @@ int init_map(char *frame_1, char *frame_2, uint8_t *depth1, uint8_t *depth2, int
     world_points[i] = kp1_cam1[i];
   }
 
-  recover_pose_svd(kp1_cam1, kp2_cam2, num_matches, R, t);
+  save_vec3("bin/x1.raw", kp1_cam1, num_matches);
+  save_vec3("bin/x2.raw", kp2_cam2, num_matches);
+
+  recover_pose_svd(kp2_cam2, kp1_cam1, num_matches, &pose->R, &pose->t, &pose->s);
+
+  int check = 3;
+
+  printf("---SVD CHECK---\n");
+  vec3 rot = product_mat3_vec3(pose->R, kp1_cam1[check]);
+  vec3 temp = vec3_add(rot, pose->t);
+  vec3_print("est", temp);
+  vec3_print("actual", kp2_cam2[check]);
+  puts("---------");
 
   return 0;
 }

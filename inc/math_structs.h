@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <math.h>
+#include <string.h>
 #include <limits.h>
 
 typedef struct Vec2 {
@@ -19,6 +20,10 @@ typedef struct Vec4 {
   float x, y, z, w;
 } vec4;
 
+typedef struct Mat2 {
+  float m[2][2];
+} mat2;
+
 typedef struct Mat3 {
   float m[3][3];
 } mat3;
@@ -27,9 +32,14 @@ typedef struct Mat4 {
   float m[4][4];
 } mat4;
 
+void init_mat2 (mat2* A);
+void init_vec2 (vec2* v);
+
 vec2 vec2_add (vec2 a, vec2 b);
 vec3 vec3_add (vec3 a, vec3 b);
 vec4 vec4_add (vec4 a, vec4 b);
+
+float mat2_det(mat2* M);
 
 vec3 product_mat3_vec3(mat3 mat, vec3 vec);
 float mat3_det(mat3 *M);

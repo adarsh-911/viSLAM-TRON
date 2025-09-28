@@ -29,10 +29,20 @@ depth_map = session.run([output_name], {input_name: input_data})[0]
 
 # Post process
 depth_map = np.squeeze(depth_map)
-depth_map = cv2.normalize(depth_map, None, 0, 255, cv2.NORM_MINMAX)
-depth_map = depth_map.astype(np.uint8)
+#depth_map = cv2.normalize(depth_map, None, 0, 255, cv2.NORM_MINMAX)
+#depth_map = depth_map.astype(np.uint8)
 
-depth_map.tofile(f"bin/depth_map_{sys.argv[1]}.raw")
+#depth_map.tofile(f"bin/depth_map_{sys.argv[1]}.raw")
+#print(depth_map.shape)
 
-#cv2.imshow("Depth Map", depth_map)
+depth_map_fullres = cv2.resize(depth_map, (w, h), interpolation=cv2.INTER_LINEAR)
+
+# Normalize and save
+depth_map_fullres_norm = cv2.normalize(depth_map_fullres, None, 0, 255, cv2.NORM_MINMAX)
+depth_map_fullres_norm = depth_map_fullres_norm.astype(np.uint8)
+
+depth_map_fullres_norm.tofile(f"bin/depth_map_{sys.argv[1]}.raw")
+
+#cv2.imshow("Depth Map", depth_map_fullres_norm)
+#cv2.imwrite("depth_map_f1.png", depth_map)
 #cv2.waitKey(0)

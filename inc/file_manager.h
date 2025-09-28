@@ -34,6 +34,7 @@ void save_points(const char *filename, RawKP *points, int count) {
   fclose(fp);
 }
 
+
 int get_depth_map (char *file, uint8_t *depth, int H, int W) {
 
   FILE *f = fopen(file, "rb");

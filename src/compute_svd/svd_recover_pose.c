@@ -53,7 +53,7 @@ void svd_mat3(mat3 M, mat3 *U, vec3 *S, mat3 *V) {
   S->x = temp_s[0]; S->y = temp_s[1]; S->z = temp_s[2];
 }
 
-void rigid_transform(vec3 *A, vec3 *B, int N, mat3 *R, vec3 *t) {
+void rigid_transform(vec3 *A, vec3 *B, int N, mat3 *R, vec3 *t, float* s) {
   vec3 muA = {0,0,0}, muB = {0,0,0};
   for(int i = 0 ; i < N ; i++) {
     muA.x += A[i].x; muA.y += A[i].y; muA.z += A[i].z;
@@ -63,6 +63,7 @@ void rigid_transform(vec3 *A, vec3 *B, int N, mat3 *R, vec3 *t) {
   muB.x /= N; muB.y /= N; muB.z /= N;
 
   float PA[N][3], PB[N][3];
+  float varA = 0.0f;
   for(int i = 0 ; i < N ; i++) {
     PA[i][0] = A[i].x - muA.x;
     PA[i][1] = A[i].y - muA.y;
@@ -70,6 +71,8 @@ void rigid_transform(vec3 *A, vec3 *B, int N, mat3 *R, vec3 *t) {
     PB[i][0] = B[i].x - muB.x;
     PB[i][1] = B[i].y - muB.y;
     PB[i][2] = B[i].z - muB.z;
+
+    varA += PA[i][0]*PA[i][0] + PA[i][1]*PA[i][1] + PA[i][2]*PA[i][2];
   }
 
   mat3 H = {0};
@@ -82,6 +85,9 @@ void rigid_transform(vec3 *A, vec3 *B, int N, mat3 *R, vec3 *t) {
   mat3 U, V;
   vec3 S;
   svd_mat3(H,&U,&S,&V);
+
+  float sigma = S.x + S.y + S.z;
+  *s = sigma / varA;
 
   mat3 Ut;
   mat3_transpose(U, &Ut);
@@ -100,9 +106,9 @@ void rigid_transform(vec3 *A, vec3 *B, int N, mat3 *R, vec3 *t) {
   t->x = temp[0]; t->y = temp[1]; t->z = temp[2];
 }
 
-void recover_pose_svd(vec3 *kp1, vec3 *kp2, int size, mat3 *R, vec3 *t) {
+void recover_pose_svd(vec3 *kp1, vec3 *kp2, int size, mat3 *R, vec3 *t, float *s) {
 
-  rigid_transform(kp1, kp2, size, R, t);
+  rigid_transform(kp1, kp2, size, R, t, s);
 
   return;
 }

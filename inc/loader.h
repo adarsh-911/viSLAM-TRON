@@ -34,19 +34,14 @@ void free_img (Img* image) {
 
   return;
 }
-
-uint8_t* access_img (Img* image, int u, int v) {
-
-  return (image->pixels + (v * image->w + u));
-}
-
+/*
 void print_pixel (Img* frame, int u, int v) {
 
-  uint8_t* p = access_img(frame, u, v);
+  uint8_t* p = get_pixel(frame, u, v);
   printf("(%d, %d) : %d\n", u, v, p[0]);
 
   return;
-}
+} */
 
 int load_frames(char *file1, Img *frame1, char *file2, Img *frame2) {
 

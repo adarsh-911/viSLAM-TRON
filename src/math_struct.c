@@ -36,8 +36,24 @@ vec3 product_mat3_vec3(mat3 mat, vec3 vec) {
   return out;
 }
 
+void init_mat2 (mat2* A) {
+  A->m[0][0] = 0.0f;
+  A->m[1][0] = 0.0f;
+  A->m[0][1] = 0.0f;
+  A->m[1][1] = 0.0f;
+}
+
+void init_vec2 (vec2* v) {
+  v->x = 0.0f;
+  v->y = 0.0f;
+}
+
 float mat3_det (mat3 *M) {
   return M->m[0][0]*(M->m[1][1]*M->m[2][2] - M->m[1][2]*M->m[2][1]) - M->m[0][1]*(M->m[1][0]*M->m[2][2]-M->m[1][2]*M->m[2][0]) + M->m[0][2]*(M->m[1][0]*M->m[2][1]-M->m[1][1]*M->m[2][0]);
+}
+
+float mat2_det (mat2* M) {
+  return (M->m[0][0]*M->m[1][1] - M->m[0][1]*M->m[1][0]);
 }
 
 void mat3_mult (mat3 A, mat3 B, mat3 *R) {
@@ -49,6 +65,10 @@ void mat3_mult (mat3 A, mat3 B, mat3 *R) {
 
 void mat3_transpose (mat3 A, mat3 *AT) {
   for(int i = 0 ; i < 3 ; i++) for(int j = 0 ; j < 3 ; j++) AT->m[j][i] = A.m[i][j];
+} 
+
+vec3 vec3_add (vec3 a, vec3 b) {
+  return (vec3){(a.x + b.x), (a.y + b.y), (a.z + b.z)};
 }
 
 void mat3_print (const char* name, mat3 M) {
