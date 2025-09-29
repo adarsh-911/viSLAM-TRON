@@ -2,16 +2,22 @@
 
 mat3 K_CAM;
 int* inv_idx;
+Pose currOptimalPose;
 
 void reProjectPoints (vec3* worldPoints, Pose* pose, vec2* estPixels, int num) {
   for (int i = 0 ; i < num ; i++) {
+
     vec3 rot = product_mat3_vec3(pose->R, worldPoints[i]);
     vec3 rot_scal = {rot.x*pose->s, rot.y*pose->s, rot.z*pose->s};
     vec3 dir = vec3_add(rot_scal, pose->t);
-    if (dir.z <= 0) {estPixels[i] = (vec2){-1, -1}; *(inv_idx++) = i; continue;}
+
+    if (dir.z <= 0) {
+      estPixels[i] = (vec2){-1, -1};
+      *(inv_idx++) = i;
+      continue;
+    }
     vec3 pixel = product_mat3_vec3(K_CAM, dir);
 
-    //printf("%f, %f, %f\n", pixel.x/pixel.z, pixel.y/pixel.z, pixel.z);
 
     estPixels[i] = (vec2){pixel.x/pixel.z, pixel.y/pixel.z};
   }
@@ -21,18 +27,27 @@ void reProjectPoints (vec3* worldPoints, Pose* pose, vec2* estPixels, int num) {
 
 void testLK (vec3* worldPoints, Img* currFrame, Img* prevFrame, Pose* prevPose, vec2* estPixels, vec2* lkPixels, int num) {
   for (int i = 0 ; i < num ; i++) {
-    if (estPixels[i].x == 1) {lkPixels[i] = (vec2){-1, -1}; *(inv_idx++) = i; continue;}
+
+    if (estPixels[i].x == 1) {
+      lkPixels[i] = (vec2){-1, -1};
+      *(inv_idx++) = i;
+
+      continue;
+    }
     vec3 rot = product_mat3_vec3(prevPose->R, worldPoints[i]);
     vec3 rot_scal = {rot.x*prevPose->s, rot.y*prevPose->s, rot.z*prevPose->s};
     vec3 dir = vec3_add(rot_scal, prevPose->t);
-    if (dir.z <= 0) {*(inv_idx++) = i; continue;}
+
+    if (dir.z <= 0) {
+      *(inv_idx++) = i;
+      continue;
+    }
+
     vec3 pixel = product_mat3_vec3(K_CAM, dir);
 
     vec2 prevUV = {pixel.x/pixel.z, pixel.y/pixel.z};
-    //printf("%f, %f, %f\n", prevUV.x, prevUV.y, pixel.z);
     lkPixels[i] = lucasKanade(prevFrame, currFrame, &prevUV, estPixels[i]);
 
-    //printf("Done i = %d\n", i);
   }
 
   return;
@@ -70,6 +85,17 @@ void estAbsPose() {
   // est abs pose (replace non void return)
 }
 
+void updateOptimalPose (Pose* pose) {
+  Pose temp = currOptimalPose, Tfw;
+  mat3_mult(temp.R, pose->R, &Tfw.R);
+  //mat3_print("R_temp", temp.R);
+  Tfw.t = vec3_add(product_mat3_vec3(temp.R, (vec3){pose->t.x * temp.s, pose->t.y * temp.s, pose->t.z * temp.s}), temp.t);
+  Tfw.s = temp.s * pose->s;
+  currOptimalPose = Tfw;
+
+  return;
+}
+
 int tracking_thread (vec3* worldPoints, const mat3 K_MAT, Img* currFrame, Img* recentFrame, Pose* recentPose, int numPoints) {
 
   K_CAM = K_MAT;
@@ -77,7 +103,8 @@ int tracking_thread (vec3* worldPoints, const mat3 K_MAT, Img* currFrame, Img* r
   //Pose* relPose = getImuPose();
   //Pose* absPose = estAbsPose(relPose);
 
-  Pose* absPose = recentPose;
+  Pose* absPose = recentPose; // Guess
+
   int invalid_idx[numPoints];
   inv_idx = invalid_idx;
 
@@ -95,14 +122,22 @@ int tracking_thread (vec3* worldPoints, const mat3 K_MAT, Img* currFrame, Img* r
 
   int inv_size = ((inv_idx) - (invalid_idx));
 
+  printf("inv_size = %d\n", inv_size);
+
   computeProjectionError(estPixels, lkPixels, ProjectionError, numPoints, invalid_idx, inv_size);
 
   printf("-------------\nError :\n");
   for (int i = 0; i < 10; i++) printf("%e\n", ProjectionError[i]);
 
-  //runBundleAdjustment_Poses();
+  pose_only_bundle_adjustment(worldPoints, lkPixels, numPoints, &absPose->R, &absPose->t, K_CAM, 10, 3.0f);
 
-  //storeOptimalPoses();
+  reProjectPoints(worldPoints, absPose, estPixels, numPoints);
+
+  computeProjectionError(estPixels, lkPixels, ProjectionError, numPoints, invalid_idx, inv_size);
+  printf("-------------\nError :\n");
+  for (int i = 0; i < 10; i++) printf("%e\n", ProjectionError[i]);
+
+  updateOptimalPose(absPose);
 
   //decideKF_andStore();
 

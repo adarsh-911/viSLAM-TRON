@@ -65,7 +65,31 @@ void mat3_mult (mat3 A, mat3 B, mat3 *R) {
 
 void mat3_transpose (mat3 A, mat3 *AT) {
   for(int i = 0 ; i < 3 ; i++) for(int j = 0 ; j < 3 ; j++) AT->m[j][i] = A.m[i][j];
-} 
+}
+
+mat3 mat3_identity() {
+  mat3 I; memset(I.m, 0, sizeof(I.m));
+  I.m[0][0]=I.m[1][1]=I.m[2][2]=1.0f;
+  return I;
+}
+
+mat3 mat3_add(const mat3 A, const mat3 B) {
+  mat3 R;
+  for (int i=0;i<3;i++) for (int j=0;j<3;j++) R.m[i][j]=A.m[i][j]+B.m[i][j];
+  return R;
+}
+
+mat3 mat3_scale(const mat3 A, float s) {
+  mat3 R;
+  for (int i=0;i<3;i++) for (int j=0;j<3;j++) R.m[i][j]=A.m[i][j]*s;
+  return R;
+}
+
+vec3 apply_rot(const mat3 R, const vec3 v) { return product_mat3_vec3(R, v); }
+
+float norm3(const vec3 v) { return sqrtf(v.x*v.x + v.y*v.y + v.z*v.z); }
+
+void mat3_copy(mat3 *dst, const mat3 *src) { memcpy(dst->m, src->m, sizeof(dst->m)); }
 
 vec3 vec3_add (vec3 a, vec3 b) {
   return (vec3){(a.x + b.x), (a.y + b.y), (a.z + b.z)};

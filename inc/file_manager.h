@@ -34,6 +34,20 @@ void save_points(const char *filename, RawKP *points, int count) {
   fclose(fp);
 }
 
+void save_poses(const char *filename, Pose *poses, int count) {
+  FILE *fp = fopen(filename, "wb");
+  if (!fp) {
+    perror("Failed to open file");
+    return;
+  }
+
+  size_t written = fwrite(poses, sizeof(Pose), count, fp);
+  if (written != (size_t)count) {
+    perror("Failed to write all points");
+  }
+
+  fclose(fp);
+}
 
 int get_depth_map (char *file, uint8_t *depth, int H, int W) {
 

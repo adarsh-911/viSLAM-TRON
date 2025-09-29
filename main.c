@@ -14,13 +14,23 @@ void save_files (Img frame1, Img frame2, RawKP *kp1, RawKP* kp2, int size) {
   save_points("bin/kp2.raw", kp2, size);
 
   return;
+}
 
+Pose init_pose() {
+  Pose initPose = {0};
+  initPose.R = mat3_identity();
+  initPose.t = (vec3){0.0f, 0.0f, 0.0f};
+  initPose.s = 1.0f;
+
+  return initPose;
 }
 
 int main() {
 
   // Current world points
   vec3 CURRENT_WORLD_POINTS[MAX_WORLD_POINTS];
+
+  Pose ALL_POSES[20];
 
   // Current Pose
   Pose currPose;
@@ -56,6 +66,10 @@ int main() {
   for (int i = 0 ; i < 10 ; i++) vec3_print("Point", CURRENT_WORLD_POINTS[i]);
   puts("...");
 
+  ALL_POSES[0] = init_pose();
+  ALL_POSES[1] = currPose;
+  currOptimalPose = currPose;
+
   // Print the current pose
   printf("Recovered pose :\n");
   mat3_print("R", currPose.R);
@@ -71,6 +85,30 @@ int main() {
   Img frame3; bool st;
   load_image("dataset/02.png", &frame3, &st);
   tracking_thread(CURRENT_WORLD_POINTS, K_MAT, &frame3, &frame2, &currPose, minSize);
+
+  ALL_POSES[2] = currOptimalPose;
+
+  // Print the current pose
+  printf("Recovered pose tracking :\n");
+  mat3_print("R", currOptimalPose.R);
+  vec3_print("t", currOptimalPose.t);
+  printf("s : %f\n", currOptimalPose.s);
   
+  // Frame 4
+  Img frame4; bool st4;
+  load_image("dataset/03.png", &frame4, &st4);
+  tracking_thread(CURRENT_WORLD_POINTS, K_MAT, &frame4, &frame3, &currOptimalPose, minSize);
+
+  ALL_POSES[3] = currOptimalPose;
+
+  // Frame 5
+  Img frame5; bool st5;
+  load_image("dataset/04.png", &frame5, &st5);
+  tracking_thread(CURRENT_WORLD_POINTS, K_MAT, &frame5, &frame4, &currOptimalPose, minSize);
+
+  ALL_POSES[4] = currOptimalPose;
+
+  save_poses("bin/poses.raw", ALL_POSES, 5);
+
   return 0;
 }

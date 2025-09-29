@@ -40,7 +40,9 @@ vec2 compute_gradient (Img* img, int u, int v) {
 }
 
 void debug_cords(int u, int v) {
-  if (u < 0 || v < 0 || u > WIDTH || v > HEIGHT) printf("Out of bounds!\n");
+  if (u < 0 || v < 0 || u > WIDTH || v > HEIGHT) //printf("Out of bounds!\n");
+
+  return;
 }
 
 void update_tensor (mat2* A, vec2 grad, float w) {
@@ -104,11 +106,12 @@ vec2 lucasKanade (Img* prevFrame, Img* currFrame, vec2* prevPoint, vec2 estPoint
 
     if (disp < CONV_THRESHOLD) {
       flag = true;
+      //printf("Converged!\n");
       break;
     }
 
     if (iter >= MAX_ITERATIONS) {
-      printf("Max iterations reached : %e\n", disp);
+      //printf("Max iterations reached : %e\n", disp);
       flag = true;
       break;
     }
