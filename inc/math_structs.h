@@ -38,6 +38,7 @@ void init_vec2 (vec2* v);
 vec2 vec2_add (vec2 a, vec2 b);
 vec3 vec3_add (vec3 a, vec3 b);
 vec4 vec4_add (vec4 a, vec4 b);
+float vec3_norm (vec3 a, vec3 b);
 
 float mat2_det(mat2* M);
 
@@ -51,6 +52,7 @@ mat3 mat3_scale(const mat3 A, float s);
 vec3 apply_rot(const mat3 R, const vec3 v);
 float norm3(const vec3 v);
 void mat3_copy(mat3 *dst, const mat3 *src);
+
 
 mat3 compute_inv(const mat3 mat);
 

@@ -95,6 +95,14 @@ vec3 vec3_add (vec3 a, vec3 b) {
   return (vec3){(a.x + b.x), (a.y + b.y), (a.z + b.z)};
 }
 
+float vec3_norm (vec3 a, vec3 b) {
+  float x_n = (a.x - b.x)*(a.x - b.x);
+  float y_n = (a.y - b.y)*(a.y - b.y);
+  float z_n = (a.z - b.z)*(a.z - b.z);
+
+  return (x_n + y_n + z_n);
+}
+
 void mat3_print (const char* name, mat3 M) {
   printf("%s:\n", name);
   for (int i = 0 ; i < 3 ; i++) printf("  % .6f % .6f % .6f\n", M.m[i][0], M.m[i][1], M.m[i][2]);

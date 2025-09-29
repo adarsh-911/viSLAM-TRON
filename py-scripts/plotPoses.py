@@ -14,7 +14,7 @@ for i in range(5):
 
 N = len(poses)
 ts = np.array([p['t'] for p in poses])
-cmap = plt.get_cmap('viridis')  # or 'plasma', 'cool', etc.
+cmap = plt.get_cmap('viridis')
 colors = cmap(np.linspace(0, 1, N))
 
 #print(poses)
@@ -22,7 +22,7 @@ colors = cmap(np.linspace(0, 1, N))
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 
-ax.scatter(ts[:,0], ts[:,1], ts[:,2], c='r', marker='o', label='Camera positions')
+ax.scatter(ts[:,0], ts[:,1], ts[:,2], c='r', marker='o')
 for i in range(N):
   t = ts[i]
   ax.scatter(t[0], t[1], t[2], color=colors[i], marker='o')
@@ -37,6 +37,6 @@ ax.set_xlabel('X')
 ax.set_ylabel('Y')
 ax.set_zlabel('Z')
 ax.set_title('Camera Poses')
-ax.legend()
+ax.view_init(elev=90, azim=90)
 plt.show()
 

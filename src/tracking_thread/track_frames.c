@@ -81,22 +81,30 @@ void getImuPose() {
   // get relative pose (replace non void return)
 }
 
-void estAbsPose() {
+void estAbsPose() { 
   // est abs pose (replace non void return)
 }
 
 void updateOptimalPose (Pose* pose) {
   Pose temp = currOptimalPose, Tfw;
   mat3_mult(temp.R, pose->R, &Tfw.R);
-  //mat3_print("R_temp", temp.R);
   Tfw.t = vec3_add(product_mat3_vec3(temp.R, (vec3){pose->t.x * temp.s, pose->t.y * temp.s, pose->t.z * temp.s}), temp.t);
   Tfw.s = temp.s * pose->s;
+
   currOptimalPose = Tfw;
 
   return;
 }
 
-int tracking_thread (vec3* worldPoints, const mat3 K_MAT, Img* currFrame, Img* recentFrame, Pose* recentPose, int numPoints) {
+uint8_t decideKF(Pose* currPose) {
+  float dist = vec3_norm(currPose->t, currOptimalPose.t);
+
+  if (dist < TRANSLATION_THRESHOLD) return true;
+
+  return false;
+}
+
+int tracking_thread (vec3* worldPoints, const mat3 K_MAT, Img* currFrame, Img* recentFrame, Pose* recentPose, int numPoints, uint8_t *status) {
 
   K_CAM = K_MAT;
 
@@ -137,9 +145,9 @@ int tracking_thread (vec3* worldPoints, const mat3 K_MAT, Img* currFrame, Img* r
   printf("-------------\nError :\n");
   for (int i = 0; i < 10; i++) printf("%e\n", ProjectionError[i]);
 
-  updateOptimalPose(absPose);
+  *status = decideKF(absPose);
 
-  //decideKF_andStore();
+  updateOptimalPose(absPose);
 
   return 0;
 }
